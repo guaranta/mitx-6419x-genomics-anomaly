@@ -6,6 +6,12 @@ Pipeline estatístico de alta dimensão: modelos de contagem (binomial), reduç�
 
 ---
 
+## Objetivos de estudo
+
+O 6.419x ensina modelagem estatística em dados de **alta dimensão e baixo sinal** — exatamente o perfil de genômica e, por analogia, de logs de infraestrutura. Este repositório cobre três competências: **(1)** modelar eventos raros com distribuição binomial e definir thresholds de alerta; **(2)** reduzir dimensionalidade com PCA e segmentar comportamento via clustering; **(3)** quantificar relações entre KPIs operacionais com correlação e regressão. O estudante deve entender não só o algoritmo, mas **quando** cada ferramenta é apropriada e como calibrar falsos positivos.
+
+---
+
 ## Resultados em destaque
 
 | Módulo | Métrica | Valor |
@@ -16,25 +22,25 @@ Pipeline estatístico de alta dimensão: modelos de contagem (binomial), reduç�
 
 ---
 
-## Figuras
+## Figuras e interpretação
 
 ### Modelo de contagem — incidentes raros (SOC)
 
 ![PMF binomial para eventos raros](docs/figures/binomial_pmf.png)
 
-Parâmetros do **exercise12** do 6.419x (`n=63`, `p=0.00203`) reinterpretados como janela de observação SOC. Threshold de alerta em 1 evento (α = 1%).
+As barras mostram a probabilidade de observar 0, 1, 2… incidentes em uma janela de 63 observações com taxa base de 0.2%. A massa concentra-se em 0 — eventos são **raros por definição**. A linha vermelha marca o threshold de alerta (1 evento, α=1%): cruzar esse limiar merece investigação. No SOC, calibrar esse threshold equilibra **detecção precoce** vs **fadiga de alertas**.
 
 ### PCA + detecção de anomalias
 
 ![Projeção PCA com pontos anômalos em vermelho](docs/figures/pca_anomaly.png)
 
-Pipeline: `StandardScaler → PCA(5) → k-means(3) → distância ao centróide → top 8%`.
+Pontos azuis são tráfego normal projetado em 2 componentes principais; vermelhos são anomalias injetadas (média deslocada). O algoritmo usa distância ao centróide k-means no espaço PCA — anomalias **distantes do cluster dominante** são flagged. Em produção, substitua features sintéticas por vetores de logs (frequência de endpoints, bytes, status codes) para detecção em NDR/SIEM.
 
 ### Regressão de KPIs operacionais
 
 ![Scatter MTTR vs downtime com reta OLS](docs/figures/kpi_regression.png)
 
-Cada ponto-minuto de MTTR associa-se a ~2 min de downtime adicional — base para SLAs e capacity planning.
+Cada ponto é um incidente; o eixo X é tempo de resposta (MTTR) e Y é downtime total. A inclinação ~2.0 significa que cada minuto adicional de MTTR custa ~2 minutos de indisponibilidade acumulada. R²=0.91 indica que MTTR explica a maior parte da variação — argumento forte para investir em **automação SOAR** e runbooks.
 
 ---
 
@@ -42,18 +48,9 @@ Cada ponto-minuto de MTTR associa-se a ~2 min de downtime adicional — base par
 
 | Módulo | Técnica | Comando |
 |--------|---------|---------|
-| `count-models/` | PMF binomial, threshold de alerta | `python count-models/run.py` |
+| `count-models/` | PMF binomial, threshold | `python count-models/run.py` |
 | `pca-anomaly/` | PCA + k-means + distância | `python pca-anomaly/run.py` |
 | `regression/` | Pearson + OLS | `python regression/run.py` |
-
-## Ponte genômica → observabilidade
-
-| Genômica (curso) | Observabilidade (este repo) |
-|------------------|----------------------------|
-| k-mer frequency matrix | Feature matrix de logs |
-| PCA de fragmentos | Redução de dimensionalidade |
-| Cluster de expressão | Segmentação de comportamento |
-| Contagem de reads | Contagem de incidentes |
 
 ## Setup
 
@@ -62,9 +59,13 @@ pip install -r requirements.txt
 python docs/generate_figures.py
 ```
 
-## Portfólio
+---
 
-- [Portfolio AI Engineer / CTO](https://portfolio-ai-cto-guaranta.netlify.app)
+## Aprendizados e aplicação no mercado
+
+A genômica ensina que **sinal raro em alta dimensão** exige modelos de contagem e redução dimensional — o mesmo framework serve para cybersecurity (eventos raros em milhares de features de log) e observabilidade (KPIs correlacionados em NOC). Binomial → alertas SOC; PCA → segmentação de tráfego e detecção de anomalias; regressão → justificar investimento em MTTR. Para CTO, este repositório demonstra que estatística aplicada não é acadêmica: é a base quantitativa de **SLAs, runbooks e priorização de backlog de segurança**.
+
+---
 
 ## Autor
 
